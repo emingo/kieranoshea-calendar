@@ -5,7 +5,7 @@ Plugin URI: http://www.kieranoshea.com
 Description: This plugin allows you to display a calendar of all your events and appointments as a page on your site.
 Author: Kieran O'Shea
 Author URI: http://www.kieranoshea.com
-Version: 1.3.3
+Version: 1.3.3.1
 */
 
 /*  Copyright 2008  Kieran O'Shea  (email : kieran@kieranoshea.com)
@@ -660,11 +660,12 @@ function check_calendar()
       $wpdb->get_results($sql);
       $sql = "INSERT INTO ".WP_CALENDAR_CONFIG_TABLE." SET config_item='enable_categories', config_value='false'";
       $wpdb->get_results($sql);
-      $sql = "CREATE TABLE " . WP_CALENDAR_CATEGORIES_TABLE . " ( 
-                                category_id INT(11) NOT NULL AUTO_INCREMENT, 
-                                category_name VARCHAR(30) NOT NULL , 
-                                category_colour VARCHAR(30) NOT NULL , 
-                                PRIMARY KEY (category_id) 
+      $sql = "CREATE TABLE " . WP_CALENDAR_CATEGORIES_TABLE . " (
+                                category_id INT(11) NOT NULL AUTO_INCREMENT,
+                                category_name VARCHAR(30) NOT NULL ,
+                                category_colour VARCHAR(30) NOT NULL ,
+                                category_fg_colour VARCHAR(30) NOT NULL DEFAULT '#000000',
+                                PRIMARY KEY (category_id)
                              )";
       $wpdb->get_results($sql);
       $sql = "INSERT INTO " . WP_CALENDAR_CATEGORIES_TABLE . " SET category_id=1, category_name='General', category_colour='#F6F79B'";
@@ -706,11 +707,12 @@ function check_calendar()
       $wpdb->get_results($sql);
       $sql = "ALTER TABLE ".WP_CALENDAR_TABLE." ADD COLUMN event_link TEXT";
       $wpdb->get_results($sql);
-      $sql = "CREATE TABLE " . WP_CALENDAR_CATEGORIES_TABLE . " ( 
-                                category_id INT(11) NOT NULL AUTO_INCREMENT, 
-                                category_name VARCHAR(30) NOT NULL , 
-                                category_colour VARCHAR(30) NOT NULL , 
-                                PRIMARY KEY (category_id) 
+      $sql = "CREATE TABLE " . WP_CALENDAR_CATEGORIES_TABLE . " (
+                                category_id INT(11) NOT NULL AUTO_INCREMENT,
+                                category_name VARCHAR(30) NOT NULL ,
+                                category_colour VARCHAR(30) NOT NULL ,
+                                category_fg_colour VARCHAR(30) NOT NULL DEFAULT '#000000',
+                                PRIMARY KEY (category_id)
                               )";
       $wpdb->get_results($sql);
       $sql = "INSERT INTO " . WP_CALENDAR_CATEGORIES_TABLE . " SET category_id=1, category_name='General', category_colour='#F6F79B'";
@@ -727,10 +729,11 @@ function check_calendar()
       $sql = "ALTER TABLE ".WP_CALENDAR_TABLE." ADD COLUMN event_link TEXT ";
       $wpdb->get_results($sql);
       $sql = "CREATE TABLE " . WP_CALENDAR_CATEGORIES_TABLE . " (
-                                category_id INT(11) NOT NULL AUTO_INCREMENT, 
-                                category_name VARCHAR(30) NOT NULL , 
-                                category_colour VARCHAR(30) NOT NULL , 
-                                PRIMARY KEY (category_id) 
+                                category_id INT(11) NOT NULL AUTO_INCREMENT,
+                                category_name VARCHAR(30) NOT NULL ,
+                                category_colour VARCHAR(30) NOT NULL ,
+                                category_fg_colour VARCHAR(30) NOT NULL DEFAULT '#000000',
+                                PRIMARY KEY (category_id)
                              )";
       $wpdb->get_results($sql);
       $sql = "INSERT INTO " . WP_CALENDAR_CATEGORIES_TABLE . " SET category_id=1, category_name='General', category_colour='#F6F79B'";
@@ -801,7 +804,7 @@ function wp_events_display_list(){
 				$sql = "SELECT * FROM " . WP_CALENDAR_CATEGORIES_TABLE . " WHERE category_id=".mysql_escape_string($event->event_category);
                                 $this_cat = $wpdb->get_row($sql);
                                 ?>
-				<td style="background-color:<?php echo stripslashes($this_cat->category_colour);?>;"><?php echo stripslashes($this_cat->category_name); ?></td>
+				<td style="color:<?php echo stripslashes($this_cat->category_fg_colour);?>;background-color:<?php echo stripslashes($this_cat->category_colour);?>;"><?php echo stripslashes($this_cat->category_name); ?></td>
 				<?php unset($this_cat); ?>
 				<td><a href="<?php echo bloginfo('wpurl') ?>/wp-admin/admin.php?page=calendar&amp;action=edit&amp;event_id=<?php echo stripslashes($event->event_id);?>" class='edit'><?php echo __('Edit','calendar'); ?></a></td>
 				<td><a href="
@@ -1857,8 +1860,8 @@ function manage_categories()
 	  <div class="error"><p><strong><?php _e('Error','calendar'); ?>:</strong> <?php _e("Security check failure, try adding the category again",'calendar'); ?></p></div>
 	<?php
       } else {
-      // Proceed with the save  
-      $sql = "INSERT INTO " . WP_CALENDAR_CATEGORIES_TABLE . " SET category_name='".mysql_escape_string($_POST['category_name'])."', category_colour='".mysql_escape_string($_POST['category_colour'])."'";
+      // Proceed with the save
+      $sql = "INSERT INTO " . WP_CALENDAR_CATEGORIES_TABLE . " SET category_name='".mysql_escape_string($_POST['category_name'])."', category_colour='".mysql_escape_string($_POST['category_colour'])."', category_fg_colour='".mysql_escape_string($_POST['category_fg_colour'])."'";
       $wpdb->get_results($sql);
       echo "<div class=\"updated\"><p><strong>".__('Category added successfully','calendar')."</strong></p></div>";
       }
@@ -1896,9 +1899,13 @@ function manage_categories()
                                 <td><input type="text" name="category_name" class="input" size="30" maxlength="30" value="<?php echo stripslashes($cur_cat->category_name) ?>" /></td>
 				</tr>
                                 <tr>
-				<td><legend><?php _e('Category Colour (Hex format)','calendar'); ?>:</legend></td>
+				<td><legend><?php _e('Category Background Colour (Hex format)','calendar'); ?>:</legend></td>
                                 <td><input type="text" name="category_colour" class="input" size="10" maxlength="7" value="<?php echo stripslashes($cur_cat->category_colour) ?>" /></td>
                                 </tr>
+                                <tr>
+                <td><legend><?php _e('Category Foreground Colour (Hex format)','calendar'); ?>:</legend></td>
+                                    <td><input type="text" name="category_fg_colour" class="input" size="10" maxlength="7" value="<?php echo stripslashes($cur_cat->category_fg_colour) ?>" /></td>
+                                    </tr>
                                 </table>
                         </div>
                         <div style="clear:both; height:1px;">&nbsp;</div>
@@ -1916,7 +1923,7 @@ function manage_categories()
 	<?php
       } else {
       // Proceed with the save
-        $sql = "UPDATE " . WP_CALENDAR_CATEGORIES_TABLE . " SET category_name='".mysql_escape_string($_POST['category_name'])."', category_colour='".mysql_escape_string($_POST['category_colour'])."' WHERE category_id=".mysql_escape_string($_POST['category_id']);
+        $sql = "UPDATE " . WP_CALENDAR_CATEGORIES_TABLE . " SET category_name='".mysql_escape_string($_POST['category_name'])."', category_colour='".mysql_escape_string($_POST['category_colour'])."', category_fg_colour='".mysql_escape_string($_POST['category_fg_colour'])."' WHERE category_id=".mysql_escape_string($_POST['category_id']);
         $wpdb->get_results($sql);
         echo "<div class=\"updated\"><p><strong>".__('Category edited successfully','calendar')."</strong></p></div>";
       }
@@ -1952,8 +1959,12 @@ function manage_categories()
                                 <td><input type="text" name="category_name" class="input" size="30" maxlength="30" value="" /></td>
                                 </tr>
                                 <tr>
-                                <td><legend><?php _e('Category Colour (Hex format)','calendar'); ?>:</legend></td>
+                                <td><legend><?php _e('Category Background Colour (Hex format)','calendar'); ?>:</legend></td>
                                 <td><input type="text" name="category_colour" class="input" size="10" maxlength="7" value="" /></td>
+                                </tr>
+                                <tr>
+                                <td><legend><?php _e('Category Foreground Colour (Hex format)','calendar'); ?>:</legend></td>
+                                <td><input type="text" name="category_fg_colour" class="input" size="10" maxlength="7" value="" /></td>
                                 </tr>
                                 </table>
                         </div>
@@ -1989,7 +2000,7 @@ function manage_categories()
            <tr class="<?php echo $class; ?>">
 	     <th scope="row"><?php echo stripslashes($category->category_id); ?></th>
 	     <td><?php echo stripslashes($category->category_name); ?></td>
-	     <td style="background-color:<?php echo stripslashes($category->category_colour); ?>;">&nbsp;</td>
+	     <td style="color:<?php echo stripslashes($category->category_fg_colour); ?>;background-color:<?php echo stripslashes($category->category_colour); ?>;">Example text</td>
 	     <td><a href="<?php echo bloginfo('wpurl')  ?>/wp-admin/admin.php?page=calendar-categories&amp;mode=edit&amp;category_id=<?php echo stripslashes($category->category_id);?>" class='edit'><?php echo __('Edit','calendar'); ?></a></td>
 	     <?php
 	     if ($category->category_id == 1)
@@ -2359,7 +2370,9 @@ function draw_event($event)
     {
       $sql = "SELECT * FROM " . WP_CALENDAR_CATEGORIES_TABLE . " WHERE category_id=".mysql_escape_string($event->event_category);
       $cat_details = $wpdb->get_row($sql);
-      $style = 'style="background-color:'.stripslashes($cat_details->category_colour).';"';
+      $style = 'style="';
+      $style .= 'background-color:'.stripslashes($cat_details->category_colour).';';
+      $style .= 'color:'.stripslashes($cat_details->category_fg_colour).';"';
     }
 
   $header_details =  '<span class="event-title" '.$style.'>'.stripslashes($event->event_title).'</span><br />
@@ -2872,7 +2885,7 @@ function calendar($cat_list = '')
 ';
         foreach($cat_details as $cat_detail)
 	  {
-	    $calendar_body .= '<tr><td style="background-color:'.$cat_detail->category_colour.'; width:20px; height:20px;" class="cat-key-cell"></td>
+	    $calendar_body .= '<tr><td style="background-color:'.$cat_detail->category_colour.';color:'.$cat_detail->category_fg_colour.'; width:20px; height:20px;" class="cat-key-cell"></td>
 <td class="cat-key-cell">&nbsp;'.$cat_detail->category_name.'</td></tr>';
 	  }
         $calendar_body .= '</table>
