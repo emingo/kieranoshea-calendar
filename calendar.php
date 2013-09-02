@@ -2227,7 +2227,7 @@ function draw_events($events)
   // Now process the events
   foreach($events as $event)
     {
-      $output .= '* '.draw_event($event).'<br />';
+      $output .= draw_event($event).'<br />';
     }
   return $output;
 }
